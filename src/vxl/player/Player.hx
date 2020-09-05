@@ -1,5 +1,6 @@
 package vxl.player;
 
+import hxd.Key;
 import h3d.prim.Sphere;
 import h3d.scene.Mesh;
 import vxl.utils.VXLMath;
@@ -17,19 +18,24 @@ class Player extends Object {
 	private var currentMouseYView:Float = 0;
 
 	private var cameraPosition:Vector;
+	private var MIN_VERTICAL_ANGLE:Float = 0.01;
+	private var MAX_VERTICAL_ANGLE:Float = 179.99;
 	private var cameraVerticalAngle:Float = 30;
 	private var cameraHorizontalAngle:Float = 0;
 	private var cameraDistance = 10;
 
 	private var position:Vector;
-	private var playerSpeed:Float = 2;
+	private var direction:Vector;
+	private var moveSpeed:Float = 10;
+	private var futureMove:Vector;
+	private var isMoving:Bool = false;
 
 	public function new(_position:Vector) {
 		super();
 		camera = new Camera();
-		// cameraPosition = new Vector(0, 0, 0);
 		position = _position;
-		trace(cameraPosition);
+		direction = new Vector(1, 0, 0);
+		futureMove = new Vector(0, 0, 0);
 
 		setPosition(position.x, position.y, position.z);
 
@@ -45,7 +51,7 @@ class Player extends Object {
 	}
 
 	private function OnInputEvent(event:hxd.Event) {
-		if (event.kind == EMove) {
+		if (event.kind == EMove) { // Mouse events
 			if (currentMouseXView == 0 && currentMouseYView == 0) {
 				currentMouseXView = event.relX;
 				currentMouseYView = event.relY;
@@ -56,48 +62,62 @@ class Player extends Object {
 				currentMouseYView = event.relY;
 
 				cameraVerticalAngle += diffY;
-				if (cameraVerticalAngle < 0) {
-					cameraVerticalAngle = 359;
-				} else if (cameraVerticalAngle > 360) {
-					cameraVerticalAngle = 0;
+				if (cameraVerticalAngle < MIN_VERTICAL_ANGLE) {
+					cameraVerticalAngle = MIN_VERTICAL_ANGLE;
+				} else if (cameraVerticalAngle > MAX_VERTICAL_ANGLE) {
+					cameraVerticalAngle = MAX_VERTICAL_ANGLE;
 				}
 
 				cameraHorizontalAngle += diffX;
 				if (cameraHorizontalAngle < 0) {
-					cameraHorizontalAngle = 360;
+					cameraHorizontalAngle = 359.99;
 				} else if (cameraHorizontalAngle > 360) {
-					cameraHorizontalAngle = 0;
+					cameraHorizontalAngle = 0.01;
 				}
-			}
-		} else if (event.kind == EKeyDown) {
-			trace(event.toString());
-			if (event.keyCode == 83) {
-				position.x += playerSpeed;
-				cameraPosition.x -= playerSpeed;
-			} else if (event.keyCode == 87) {
-				position.x -= playerSpeed;
 			}
 		}
 	}
 
-	private function UpdatePlayer() {
+	private function UpdatePlayer(dt:Float) {
+		var camX = cameraPosition.x;
+		var camY = cameraPosition.y;
+
+		var playerX = position.x;
+		var playerY = position.y;
+
+		direction = new Vector(-camX + playerX, -camY + playerY, 0);
+		direction = direction.getNormalized();
+
+		if (Key.isDown(Key.W)) {
+			var temp = direction.clone();
+			futureMove.x = temp.x * moveSpeed;
+			futureMove.y = temp.y * moveSpeed;
+			futureMove.z = temp.z * moveSpeed;
+		}
+		if (Key.isDown(Key.S)) {
+			var temp = direction.clone();
+			futureMove.x = temp.x * moveSpeed * -1;
+			futureMove.y = temp.y * moveSpeed * -1;
+			futureMove.z = temp.z * moveSpeed * -1;
+		}
+		position.x = position.x + (futureMove.x * dt);
+		position.y = position.y + (futureMove.y * dt);
+		position.z = position.z + (futureMove.z * dt);
 		setPosition(position.x, position.y, position.z);
+		futureMove = new Vector(0, 0, 0);
 	}
 
 	private function UpdateCamera() {
-		cameraPosition = new Vector(cameraDistance * Math.cos(VXLMath.DegToRad(cameraHorizontalAngle)) * Math.sin(VXLMath.DegToRad(cameraVerticalAngle)),
-			-cameraDistance * Math.sin(VXLMath.DegToRad(cameraHorizontalAngle)) * Math.sin(VXLMath.DegToRad(cameraVerticalAngle)),
+		cameraPosition = new Vector(-cameraDistance * Math.cos(VXLMath.DegToRad(cameraHorizontalAngle)) * Math.sin(VXLMath.DegToRad(cameraVerticalAngle)),
+			cameraDistance * Math.sin(VXLMath.DegToRad(cameraHorizontalAngle)) * Math.sin(VXLMath.DegToRad(cameraVerticalAngle)),
 			cameraDistance * Math.cos(VXLMath.DegToRad(cameraVerticalAngle)));
-		// cameraPosition.x += position.x;
-		// cameraPosition.y += position.y;
-		// cameraPosition.z += position.z;
 		cameraPosition = cameraPosition.add(position);
 		camera.pos.set(cameraPosition.x, cameraPosition.y, cameraPosition.z);
 		camera.target.set(position.x, position.y, position.z);
 	}
 
 	public function OnUpdate(dt:Float) {
-		UpdatePlayer();
+		UpdatePlayer(dt);
 		UpdateCamera();
 	}
 }

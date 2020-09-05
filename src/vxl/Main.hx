@@ -23,7 +23,7 @@ class Main extends App {
 		player = new Player(new Vector(0, 0, 0));
 
 		this.setScene(sceneManager.GetCurrentScene());
-		// Sdl.setRelativeMouseMode(true);
+		Sdl.setRelativeMouseMode(true);
 	}
 
 	override function update(dt:Float) {
