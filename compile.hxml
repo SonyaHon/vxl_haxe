@@ -1,0 +1,5 @@
+-lib heaps
+-lib hlsdl
+-cp src
+-hl vxl.hl
+-main vxl.Main
