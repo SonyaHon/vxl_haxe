@@ -1,11 +1,10 @@
 package vxl.world;
 
+import h3d.scene.Object;
+import vxl.scene.SceneManager.SCENE;
+import h3d.scene.fwd.DirLight;
 import h3d.Vector;
-import h3d.scene.pbr.DirLight;
-import h3d.scene.Mesh;
-import h3d.prim.Cube;
-import h3d.scene.Scene;
-import vxl.scnene.SceneManager;
+import vxl.world.generation.Chunk;
 
 /**
  * Controls everething about world
@@ -17,51 +16,54 @@ class World extends h3d.scene.Object {
 
 	private var ambientLight:Vector;
 
+	private var worldTransform:Object;
+	private var loadedChunks:Array<Chunk>;
+
 	public function new() {
 		super();
 		setPosition(0, 0, 0);
-		cast(Main.instance.sceneManager.GetScene(SCENE.GAME_WORLD), Scene).addChild(this);
+		Main.instance.sceneManager.get3dScene(SCENE.WORLD).addChild(this);
+
+		worldTransform = new Object(this);
+		worldTransform.setPosition(0, 0, 0);
 
 		InitializeChunks();
+		InitializeLight();
 	}
 
 	private function InitializeLight() {
-		sun = new DirLight(new Vector(0.3, 0.2, 0.5));
-		// sunPosition = new Vector(0, 0, 10);
-		ambientLight = new Vector(0.4, 0.3, 0.2);
-		addChild(sun);
+		sun = new DirLight(new Vector(0.5, -0.3, -0.2), Main.instance.sceneManager.get3dScene(SCENE.WORLD));
+		sunPosition = new Vector(0, 0, 10);
+		ambientLight = new Vector(0.1, 0.1, 0.1);
 		UpdateLight();
 	}
 
 	private function UpdateLight() {
+		Main.instance.s3d.lightSystem.ambientLight.set(ambientLight.x, ambientLight.y, ambientLight.z);
 		// sun.setPosition(sunPosition.x, sunPosition.y, sunPosition.z);
 		// sun.setDirection(new Vector(0, 0, 0));
 	}
 
+	private function ClearWorldTransform() {
+		worldTransform.removeChildren();
+	}
+
+	private function UpdateLoadedChunks() {
+		for (chunk in loadedChunks) {
+			worldTransform.addChild(chunk);
+		}
+	}
+
 	private function InitializeChunks() {
-		var cube:Cube = new Cube();
-		cube.translate(-0.5, -0.5, -0.5);
-		cube.addNormals();
-		var mesh:Mesh = new Mesh(cube);
-		mesh.material.shadows = false;
-		mesh.material.color.setColor(0x0055FF);
-		mesh.setPosition(0, 0, 0);
-		addChild(mesh);
+		loadedChunks = [];
 
-		var floor:Mesh = new Mesh(cube);
-		floor.material.color.setColor(0xFF00FF);
-		floor.scaleX = 10;
-		floor.scaleY = 10;
-		floor.scaleZ = 0.2;
-		floor.setPosition(0, 0, -0.2);
-		addChild(floor);
+		for (y in 0...1) {
+			for (x in 0...1) {
+				loadedChunks.push(new Chunk(new Vector(x, y)));
+			}
+		}
 
-		var cola:Mesh = new Mesh(cube);
-		cola.scaleX = 0.5;
-		cola.scaleY = 0.5;
-		cola.scaleZ = 4;
-		cola.material.color.setColor(0x00FF00);
-		cola.setPosition(2.5, 0, 3);
-		addChild(cola);
+		ClearWorldTransform();
+		UpdateLoadedChunks();
 	}
 }

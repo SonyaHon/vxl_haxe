@@ -1,9 +1,8 @@
 package vxl;
 
 import sdl.Sdl;
-import hxd.Window;
 import h3d.Vector;
-import vxl.scnene.SceneManager;
+import vxl.scene.SceneManager;
 import vxl.world.World;
 import vxl.player.Player;
 import hxd.App;
@@ -22,7 +21,7 @@ class Main extends App {
 		world = new World();
 		player = new Player(new Vector(0, 0, 0));
 
-		this.setScene(sceneManager.GetCurrentScene());
+		setScene(sceneManager.getCurrentScene());
 		Sdl.setRelativeMouseMode(true);
 	}
 
