@@ -1,7 +1,6 @@
 package vxl.world.generation;
 
 import hxd.IndexBuffer;
-import vxl.shaders.ChunkShader;
 import h3d.col.Point;
 import h3d.mat.Material;
 import h3d.prim.Polygon;
@@ -97,7 +96,6 @@ class Chunk extends Object {
 		primitive = new Polygon(verticies, indices);
 		material = Material.create();
 		material.mainPass.enableLights = false;
-		// material.mainPass.addShader(new ChunkShader());
 		mesh = new Mesh(primitive, material);
 		addChild(mesh);
 	}
