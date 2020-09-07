@@ -59,7 +59,9 @@ class World extends h3d.scene.Object {
 
 		for (y in 0...1) {
 			for (x in 0...1) {
-				loadedChunks.push(new Chunk(new Vector(x, y)));
+				var chunk = new Chunk(new Vector(x, y));
+				chunk.Generate();
+				loadedChunks.push(chunk);
 			}
 		}
 
